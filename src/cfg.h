@@ -32,6 +32,12 @@ typedef struct {
     // [log]
     char log_path[256];
     int log_max_size_mb;
+
+    // [llm]
+    char llm_endpoint[256];
+    char llm_model[128];
+    int llm_max_tokens;
+    char llm_system_prompt[512];
 } Config;
 
 // load config from INI file, then overlay environment variables

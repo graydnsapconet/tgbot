@@ -27,6 +27,7 @@ static void print_usage(void)
            "  help, --help     Show this help message\n");
 }
 
+// TODO: add `tgbot logs delete`
 // fork + exec a command.  Returns the child exit code, or -1 on error
 static int run_cmd(const char *const argv[])
 {

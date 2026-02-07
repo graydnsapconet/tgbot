@@ -33,5 +33,11 @@
 #define CFG_DEFAULT_WEBHOOK_PORT      8443
 #define CFG_DEFAULT_WEBHOOK_THREADS   4
 #define CFG_DEFAULT_WEBHOOK_POOL_SIZE 8
-#define CFG_DEFAULT_WORKER_COUNT      2
+#define CFG_DEFAULT_WORKER_COUNT      1
 #define CFG_DEFAULT_USER_RING_SIZE    30
+
+// LLM defaults
+#define CFG_DEFAULT_LLM_ENDPOINT      "http://127.0.0.1:11434"
+#define CFG_DEFAULT_LLM_MODEL          ""
+#define CFG_DEFAULT_LLM_MAX_TOKENS     512
+#define CFG_DEFAULT_LLM_SYSTEM_PROMPT  "You are a helpful Telegram bot assistant. Keep replies concise."

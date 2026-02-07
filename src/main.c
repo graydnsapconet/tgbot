@@ -6,6 +6,7 @@
 #include "cli.h"
 #include "commands.h"
 #include "config.h"
+#include "llm.h"
 #include "logger.h"
 #include "queue.h"
 #include "webhook.h"
@@ -40,6 +41,10 @@ typedef struct {
     const char *token;
     int reply_delay;
     volatile sig_atomic_t *running;
+    const char *llm_endpoint;
+    const char *llm_model;
+    int llm_max_tokens;
+    const char *llm_system_prompt;
 } WorkerArg;
 
 static double monotonic_sec(void)
@@ -62,6 +67,14 @@ static void *worker_main(void *arg)
 
     log_info("worker %d: ready", wa->id);
 
+    // each worker gets its own LLM handle (curl is not thread-safe)
+    LlmHandle *llm = llm_init(wa->llm_endpoint, wa->llm_model);
+    if (!llm) {
+        log_warn("worker %d: LLM init failed - will echo instead", wa->id);
+    } else {
+        llm_set_abort_flag(llm, wa->running);
+    }
+
     QueueMsg msg;
     while (queue_pop(&msg) == 0) {
         // enforce <=1 msg/s per user: sleep delta
@@ -78,6 +91,7 @@ static void *worker_main(void *arg)
                 }
             }
             if (!*wa->running) {
+                llm_cleanup(llm);
                 bot_cleanup(bot);
                 log_info("worker %d: exiting (signal)", wa->id);
                 free(wa);
@@ -85,9 +99,19 @@ static void *worker_main(void *arg)
             }
         }
 
-        bot_send_message(bot, msg.chat_id, msg.text);
+        // generate reply via LLM or fall back to echo
+        char reply[4096];
+        if (llm && llm_chat(llm, wa->llm_system_prompt, msg.text,
+                            reply, sizeof(reply), wa->llm_max_tokens) == 0) {
+            bot_send_message(bot, msg.chat_id, reply);
+        } else {
+            char echo[1100];
+            snprintf(echo, sizeof(echo), "Hello! You said: %s", msg.text);
+            bot_send_message(bot, msg.chat_id, echo);
+        }
     }
 
+    llm_cleanup(llm);
     bot_cleanup(bot);
     log_info("worker %d: exiting", wa->id);
     free(wa);
@@ -182,11 +206,8 @@ static int64_t handle_update(Whitelist *wl, const cJSON *update)
     log_info("tgbot: [%" PRId64 "] %s: %s", chat_id,
            cJSON_IsString(from_name) ? from_name->valuestring : "?", text);
 
-    // enqueue reply for worker threads
-    // TODO: replace echo reply with actual bot logic / LLM integration
-    char reply[1024];
-    snprintf(reply, sizeof(reply), "Hello! You said: %s", text);
-    if (queue_push(from_id, chat_id, reply) != 0) {
+    // enqueue user message for worker threads (LLM generates the reply)
+    if (queue_push(from_id, chat_id, text) != 0) {
         log_warn("tgbot: queue full for user %" PRId64 " - message dropped", from_id);
     }
 
@@ -302,6 +323,10 @@ int main(int argc, char **argv)
         wa->token = g_cfg.token;
         wa->reply_delay = g_cfg.reply_delay;
         wa->running = &g_running;
+        wa->llm_endpoint = g_cfg.llm_endpoint;
+        wa->llm_model = g_cfg.llm_model;
+        wa->llm_max_tokens = g_cfg.llm_max_tokens;
+        wa->llm_system_prompt = g_cfg.llm_system_prompt;
         if (pthread_create(&workers[i], NULL, worker_main, wa) != 0) {
             log_error("tgbot: failed to create worker %d", i);
             free(wa);

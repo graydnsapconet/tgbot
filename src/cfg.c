@@ -50,6 +50,14 @@ static void config_set_defaults(Config *cfg)
 
     snprintf(cfg->log_path, sizeof(cfg->log_path), "%s", LOG_DEFAULT_PATH);
     cfg->log_max_size_mb = LOG_DEFAULT_MAX_MB;
+
+    snprintf(cfg->llm_endpoint, sizeof(cfg->llm_endpoint), "%s",
+             CFG_DEFAULT_LLM_ENDPOINT);
+    snprintf(cfg->llm_model, sizeof(cfg->llm_model), "%s",
+             CFG_DEFAULT_LLM_MODEL);
+    cfg->llm_max_tokens = CFG_DEFAULT_LLM_MAX_TOKENS;
+    snprintf(cfg->llm_system_prompt, sizeof(cfg->llm_system_prompt), "%s",
+             CFG_DEFAULT_LLM_SYSTEM_PROMPT);
 }
 
 static int ini_handler_cb(void *user, const char *section, const char *name, const char *value)
@@ -91,6 +99,14 @@ static int ini_handler_cb(void *user, const char *section, const char *name, con
         snprintf(cfg->log_path, sizeof(cfg->log_path), "%s", value);
     } else if (MATCH("log", "max_size_mb")) {
         parse_int(value, 1, 1024, &cfg->log_max_size_mb);
+    } else if (MATCH("llm", "endpoint")) {
+        snprintf(cfg->llm_endpoint, sizeof(cfg->llm_endpoint), "%s", value);
+    } else if (MATCH("llm", "model")) {
+        snprintf(cfg->llm_model, sizeof(cfg->llm_model), "%s", value);
+    } else if (MATCH("llm", "max_tokens")) {
+        parse_int(value, 32, 4096, &cfg->llm_max_tokens);
+    } else if (MATCH("llm", "system_prompt")) {
+        snprintf(cfg->llm_system_prompt, sizeof(cfg->llm_system_prompt), "%s", value);
     } else {
         fprintf(stderr, "cfg: unknown key [%s] %s\n", section, name);
         return 0; // unknown key - treat as error
@@ -190,8 +206,13 @@ void config_dump(const Config *cfg)
            cfg->webhook_enabled ? "true" : "false",
            cfg->webhook_port, cfg->webhook_secret[0] ? "********" : "(none)",
            cfg->webhook_threads, cfg->webhook_pool_size);
-    printf("cfg: [group]   home_group_id=%" PRId64 "\n", cfg->home_group_id);
-    printf("cfg: [admin]   admin_user_id=%" PRId64 "\n", cfg->admin_user_id);
+    printf("cfg: [group]   home_group_id=%s\n",
+           cfg->home_group_id != 0 ? "****" : "(none)");
+    printf("cfg: [admin]   admin_user_id=%s\n",
+           cfg->admin_user_id != 0 ? "****" : "(none)");
     printf("cfg: [workers] count=%d ring_size=%d\n", cfg->worker_count, cfg->user_ring_size);
     printf("cfg: [log]     path=%s max_size_mb=%d\n", cfg->log_path, cfg->log_max_size_mb);
+    printf("cfg: [llm]     endpoint=%s model=%s max_tokens=%d\n",
+           cfg->llm_endpoint, cfg->llm_model[0] ? cfg->llm_model : "(server default)",
+           cfg->llm_max_tokens);
 }

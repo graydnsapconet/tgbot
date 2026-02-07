@@ -52,7 +52,7 @@ admin_user_id = 0
 
 [workers]
 ; Number of worker threads (1-16)
-count = 2
+count = 1
 
 ; Per-user message ring buffer size (4-256)
 ring_size = 30
@@ -63,3 +63,16 @@ path = /var/log/tgbot/tgbot.log
 
 ; Maximum log file size in MB before circular overwrite (1-1024)
 max_size_mb = 10
+
+[llm]
+; Local LM Studio (OpenAI-compatible) endpoint
+endpoint = http://127.0.0.1:11434
+
+; Model to use (leave blank for server default)
+model =
+
+; Hard limit on generated tokens per reply (32-4096)
+max_tokens = 512
+
+; System prompt sent with every request (no chat memory)
+system_prompt = You are a helpful Telegram bot assistant. Keep replies concise.
