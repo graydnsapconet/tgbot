@@ -23,6 +23,12 @@ void llm_set_abort_flag(LlmHandle *llm, volatile sig_atomic_t *flag);
 // out_buf / out_cap: caller-provided buffer for the assistant reply.
 // max_tokens: hard limit on generated tokens (e.g. 512).
 // returns 0 on success, -1 on error (out_buf will contain a fallback message).
+// note: <think>...</think> blocks are automatically stripped from the response.
 int llm_chat(LlmHandle *llm, const char *system_prompt,
              const char *user_msg, char *out_buf, size_t out_cap,
              int max_tokens);
+
+// strip <think>...</think> blocks (including self-closing <think/>) from text.
+// modifies the string in-place and returns the new length.
+// exported for testability.
+size_t llm_strip_think_tags(char *text);

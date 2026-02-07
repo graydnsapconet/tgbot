@@ -99,6 +99,11 @@ static void *worker_main(void *arg)
             }
         }
 
+        // send acknowledgment while LLM is thinking
+        if (llm) {
+            bot_send_message(bot, msg.chat_id, "\xE2\x9C\x8D Thinking...");
+        }
+
         // generate reply via LLM or fall back to echo
         char reply[4096];
         if (llm && llm_chat(llm, wa->llm_system_prompt, msg.text,
@@ -191,6 +196,9 @@ static int64_t handle_update(Whitelist *wl, const cJSON *update)
         if (cmd_dispatch(&ctx, text)) {
             return update_id;
         }
+        // unknown slash command - don't forward to LLM
+        queue_push(from_id, chat_id, "Unknown command. Try /help");
+        return update_id;
     }
 
     // whitelist gate

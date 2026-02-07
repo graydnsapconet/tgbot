@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 // maximum response body from LM Studio (256 KiB)
 #define LLM_RESPONSE_MAX (256 * 1024)
@@ -126,6 +127,86 @@ void llm_set_abort_flag(LlmHandle *llm, volatile sig_atomic_t *flag)
     }
 }
 
+// strip all <think>...</think> blocks (and self-closing <think/>) from text in-place.
+// handles nested occurrences, missing close tags, and leading/trailing whitespace.
+size_t llm_strip_think_tags(char *text)
+{
+    if (!text) {
+        return 0;
+    }
+
+    char *dst = text;
+    const char *src = text;
+    size_t len = strlen(text);
+    const char *end = text + len;
+
+    while (src < end) {
+        // look for <think at current position (case-insensitive)
+        if (*src == '<' && (size_t)(end - src) >= 7 &&
+            strncasecmp(src, "<think", 6) == 0) {
+
+            const char *after_tag = src + 6;
+
+            // self-closing: <think/> or <think />
+            if (after_tag < end && *after_tag == '/') {
+                after_tag++;
+                if (after_tag < end && *after_tag == '>') {
+                    src = after_tag + 1;
+                    continue;
+                }
+            }
+            if (after_tag < end && *after_tag == ' ' && (after_tag + 1) < end &&
+                *(after_tag + 1) == '/' && (after_tag + 2) < end &&
+                *(after_tag + 2) == '>') {
+                src = after_tag + 3;
+                continue;
+            }
+
+            // opening <think> - find matching </think>
+            if (after_tag < end && *after_tag == '>') {
+                const char *close = after_tag + 1;
+                // search for </think>
+                while (close < end) {
+                    if (*close == '<' && (size_t)(end - close) >= 8 &&
+                        strncasecmp(close, "</think>", 8) == 0) {
+                        src = close + 8;
+                        break;
+                    }
+                    close++;
+                }
+                if (close >= end) {
+                    // no closing tag found - strip rest of string
+                    src = end;
+                }
+                continue;
+            }
+        }
+
+        *dst++ = *src++;
+    }
+    *dst = '\0';
+
+    // trim leading whitespace
+    char *start = text;
+    while (*start == ' ' || *start == '\t' || *start == '\n' || *start == '\r') {
+        start++;
+    }
+    if (start != text) {
+        size_t final_len = (size_t)(dst - start);
+        memmove(text, start, final_len + 1);
+        dst = text + final_len;
+    }
+
+    // trim trailing whitespace
+    while (dst > text && (*(dst - 1) == ' ' || *(dst - 1) == '\t' ||
+                          *(dst - 1) == '\n' || *(dst - 1) == '\r')) {
+        dst--;
+    }
+    *dst = '\0';
+
+    return (size_t)(dst - text);
+}
+
 int llm_chat(LlmHandle *llm, const char *system_prompt,
              const char *user_msg, char *out_buf, size_t out_cap,
              int max_tokens)
@@ -234,5 +315,13 @@ int llm_chat(LlmHandle *llm, const char *system_prompt,
 
     snprintf(out_buf, out_cap, "%s", content->valuestring);
     cJSON_Delete(json);
+
+    // strip <think>...</think> reasoning blocks from the response
+    size_t stripped_len = llm_strip_think_tags(out_buf);
+    if (stripped_len == 0) {
+        snprintf(out_buf, out_cap, "[llm error: empty after stripping think tags]");
+        return -1;
+    }
+
     return 0;
 }

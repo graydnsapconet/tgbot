@@ -28,12 +28,13 @@ WL_OBJS      := $(BUILD)/whitelist.o
 CMD_OBJS     := $(BUILD)/commands.o $(BUILD)/queue.o $(BUILD)/whitelist.o
 CFG_OBJS     := $(BUILD)/cfg.o
 BOT_OBJS     := $(BUILD)/bot.o
+LLM_OBJS     := $(BUILD)/llm.o
 CJSON_OBJ    := $(BUILD)/cJSON.o
 INI_OBJ      := $(BUILD)/ini.o
 LOGGER_OBJ   := $(BUILD)/logger.o
 
 # test bins
-TESTS := $(BUILD)/test_queue $(BUILD)/test_webhook $(BUILD)/test_whitelist $(BUILD)/test_commands $(BUILD)/test_logger $(BUILD)/test_cfg $(BUILD)/test_stress $(BUILD)/test_bot
+TESTS := $(BUILD)/test_queue $(BUILD)/test_webhook $(BUILD)/test_whitelist $(BUILD)/test_commands $(BUILD)/test_logger $(BUILD)/test_cfg $(BUILD)/test_stress $(BUILD)/test_bot $(BUILD)/test_llm
 
 .PHONY: all clean test test-asan test-valgrind tsan
 
@@ -77,6 +78,9 @@ $(BUILD)/test_stress.o: test_stress.c test.h | $(BUILD)
 $(BUILD)/test_bot.o: test_bot.c test.h | $(BUILD)
 	$(CC) $(CFLAGS) -DTESTING -I$(LIB_DIR) -I$(SRC_DIR) -c $< -o $@
 
+$(BUILD)/test_llm.o: test_llm.c test.h | $(BUILD)
+	$(CC) $(CFLAGS) -I$(LIB_DIR) -I$(SRC_DIR) -c $< -o $@
+
 $(BUILD)/bot_test.o: $(SRC_DIR)/bot.c | $(BUILD)
 	$(CC) $(CFLAGS) -DTESTING -I$(LIB_DIR) -I$(SRC_DIR) -c $< -o $@
 
@@ -103,6 +107,9 @@ $(BUILD)/test_stress: $(BUILD)/test_stress.o $(QUEUE_OBJS) $(LOGGER_OBJ) | $(BUI
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -o $@
 
 $(BUILD)/test_bot: $(BUILD)/test_bot.o $(BUILD)/bot_test.o $(CJSON_OBJ) $(LOGGER_OBJ) | $(BUILD)
+	$(CC) $(CFLAGS) $^ $(LDFLAGS) -lcurl -o $@
+
+$(BUILD)/test_llm: $(BUILD)/test_llm.o $(LLM_OBJS) $(CJSON_OBJ) $(LOGGER_OBJ) | $(BUILD)
 	$(CC) $(CFLAGS) $^ $(LDFLAGS) -lcurl -o $@
 
 # run all tests
