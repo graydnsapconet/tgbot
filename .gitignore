@@ -1,0 +1,41 @@
+# build artifacts
+build/
+tests/build/
+fuzz/build/
+*.o
+*.d
+*.a
+*.so
+*.out
+
+# runtime/config
+tgbot.ini
+tgbot.env
+whitelist.txt
+*.log
+
+# editors/IDE
+.vscode/
+*.swp
+*.swo
+*~
+.idea/
+
+# debugger/profiler
+core
+core.*
+vgcore.*
+*.dSYM/
+perf.data
+perf.data.old
+
+# sanitizer/fuzzer output
+fuzz/crash-*
+fuzz/leak-*
+fuzz/timeout-*
+fuzz/slow-unit-*
+fuzz/oom-*
+
+# OS junk
+.DS_Store
+Thumbs.db

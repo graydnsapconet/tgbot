@@ -1,0 +1,55 @@
+---
+Checks: >
+  -*,
+  clang-diagnostic-pragma-once-outside-header,
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*,
+  concurrency-*,
+  misc-*,
+  performance-*,
+  readability-identifier-naming,
+  readability-braces-around-statements,
+  readability-isolate-declaration,
+  readability-redundant-control-flow,
+  readability-misleading-indentation,
+  -bugprone-easily-swappable-parameters,
+  -misc-no-recursion,
+  -cert-err33-c
+
+WarningsAsErrors: >
+  bugprone-*,
+  cert-*,
+  clang-analyzer-*
+
+HeaderFilterRegex: 'src/.*\.h$'
+
+CheckOptions:
+  # naming conventions
+  - key:   readability-identifier-naming.VariableCase
+    value: lower_case
+  - key:   readability-identifier-naming.FunctionCase
+    value: lower_case
+  - key:   readability-identifier-naming.TypedefCase
+    value: CamelCase
+  - key:   readability-identifier-naming.StructCase
+    value: CamelCase
+  - key:   readability-identifier-naming.EnumCase
+    value: CamelCase
+  - key:   readability-identifier-naming.MacroDefinitionCase
+    value: UPPER_CASE
+  - key:   readability-identifier-naming.GlobalConstantCase
+    value: UPPER_CASE
+  - key:   readability-identifier-naming.ParameterCase
+    value: lower_case
+  - key:   readability-identifier-naming.LocalVariableCase
+    value: lower_case
+  - key:   readability-identifier-naming.GlobalVariablePrefix
+    value: 'g_'
+
+  # misc
+  - key:   bugprone-assert-side-effect.AssertMacros
+    value: assert
+  - key:   misc-unused-parameters.StrictMode
+    value: 'false'
+...

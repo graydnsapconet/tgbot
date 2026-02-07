@@ -1,0 +1,54 @@
+---
+# tgbot — clang-format configuration
+# Style: LLVM base with 4-space indent (per AGENTS.md)
+
+BasedOnStyle: LLVM
+IndentWidth: 4
+TabWidth: 4
+UseTab: Never
+ColumnLimit: 110
+
+# Braces
+BreakBeforeBraces: Linux
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLoopsOnASingleLine: false
+AllowShortBlocksOnASingleLine: Empty
+
+# TODO: change to combine first two priorities into one
+# Includes
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  # 1. Paired header  ("bot.h" in bot.c)
+  - Regex:    '^"[^/]*\.h"'
+    Priority: 1
+  # 2. Project headers
+  - Regex:    '^"'
+    Priority: 2
+  # 3. System / library headers
+  - Regex:    '^<'
+    Priority: 3
+
+# Alignment
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: false
+AlignConsecutiveDeclarations: false
+AlignEscapedNewlines: Left
+AlignOperands: Align
+AlignTrailingComments: true
+
+# Spacing
+SpaceAfterCStyleCast: false
+SpaceBeforeParens: ControlStatements
+SpacesInParentheses: false
+
+# Pointers
+PointerAlignment: Right
+
+# Penalties
+PenaltyBreakComment: 300
+PenaltyBreakString: 1000
+PenaltyExcessCharacter: 100
+PenaltyReturnTypeOnItsOwnLine: 60
+...
