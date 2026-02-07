@@ -1,0 +1,42 @@
+[Unit]
+Description=Telegram Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+ExecStart=/usr/local/bin/tgbot run
+WorkingDirectory=/etc/tgbot
+EnvironmentFile=-/etc/tgbot/tgbot.env
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=10
+
+User=tgbot
+Group=tgbot
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=tgbot
+ReadWritePaths=/var/log/tgbot /etc/tgbot
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+MemoryDenyWriteExecute=yes
+LockPersonality=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+RestrictNamespaces=yes
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target

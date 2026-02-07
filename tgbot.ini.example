@@ -1,0 +1,65 @@
+; tgbot configuration file
+; Copy to tgbot.ini and adjust values.
+;
+; Environment variable precedence (highest wins):
+;   T_TOKEN          > TELEGRAM_BOT_TOKEN > INI [bot] token
+;   T_SECRET         > WEBHOOK_SECRET     > INI [webhook] secret
+;
+; When using systemd, you can also set these in /etc/tgbot/tgbot.env
+; (loaded via EnvironmentFile in the service unit).
+
+[bot]
+; Telegram bot token (or set TELEGRAM_BOT_TOKEN env var)
+token =
+
+; Delay in seconds before the bot replies (per-user rate limit floor)
+reply_delay = 3
+
+; getUpdates long-poll timeout in seconds
+poll_timeout = 30
+
+; Maximum updates per getUpdates call (1-100)
+poll_limit = 100
+
+; Path to the whitelist file (one user_id per line)
+whitelist_path = whitelist.txt
+
+[webhook]
+; Set to true to use webhook mode instead of polling
+enabled = false
+
+; Local port for libmicrohttpd (Cloudflare terminates TLS)
+port = 8443
+
+; Secret token for X-Telegram-Bot-Api-Secret-Token validation
+; (or set WEBHOOK_SECRET env var)
+secret =
+
+; Number of libmicrohttpd threads for handling requests (1-32)
+threads = 4
+
+; Post-body pool size for pre-allocated request buffers (1-64)
+pool_size = 8
+
+[group]
+; Home group chat ID. Set to 0 or omit to accept all groups.
+home_group_id = 0
+
+[admin]
+; Telegram user ID of the admin who can use /allow and /revoke.
+; Set to 0 or omit to disable admin commands.
+admin_user_id = 0
+
+[workers]
+; Number of worker threads (1-16)
+count = 2
+
+; Per-user message ring buffer size (4-256)
+ring_size = 30
+
+[log]
+; Log file path (default: /var/log/tgbot/tgbot.log)
+path = /var/log/tgbot/tgbot.log
+
+; Maximum log file size in MB before circular overwrite (1-1024)
+max_size_mb = 10
